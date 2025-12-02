@@ -1,4 +1,4 @@
-# Multilingual AI Abuse Detection System
+# Multilingual AI Abuse Detection Model
 
 A robust, context-aware moderation system for detecting and masking abusive language in citizen complaint platforms across English, Hindi, Hinglish, and Odia.
 
