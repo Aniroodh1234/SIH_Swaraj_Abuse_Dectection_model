@@ -100,7 +100,7 @@ uvicorn app.main:app --reload --port 8001
 **Request Format:**
 ```json
 {
-  "text": "hey u motherfucker tell me how to register"
+  "text": "hey u IDIOT tell me how to register"
 }
 ```
 
@@ -136,24 +136,3 @@ uvicorn app.main:app --reload --port 8001
   "flagged_spans": []
 }
 ```
-
-### Response Fields
-
-- `has_abuse`: Boolean indicating whether abusive content was detected
-- `original_text`: Unmodified input text
-- `clean_text`: Text with abusive phrases masked
-- `severity`: Classification of abuse level (none, low, medium, high)
-- `flagged_spans`: Array of detected abusive phrases with metadata including position, language, category, and confidence score
-
-## Use Cases
-
-This system is particularly well-suited for:
-
-- Government grievance portals and complaint management systems
-- Public forum moderation where context preservation is critical
-- Multi-lingual content platforms requiring consistent policy enforcement
-- Systems where complete message rejection is undesirable
-
-## License
-
-This project uses open-source components. Please review individual component licenses for specific terms.
