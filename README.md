@@ -1,44 +1,22 @@
-# Multilingual AI Abuse Detection Model
-
-A robust, context-aware moderation system for detecting and masking abusive language in citizen complaint platforms across English, Hindi, Hinglish, and Odia.
+# Advanced NLP System for Real-Time Abuse Detection and Content Sanitization
 
 ## Overview
 
-This system implements a hybrid approach to content moderation that goes beyond traditional single-model solutions. By combining multiple detection layers, it achieves high accuracy while preserving the original context and structure of user submissions.
+This project implements an intelligent, multilingual text moderation system designed to sanitize user-submitted complaints on public grievance platforms. The system automatically identifies, extracts, and masks abusive or toxic expressions across English, Hindi, Hinglish, and Odia while preserving the semantic intent of the original message. Built using a hybrid AI approach, the system delivers high-precision abuse detection through the combined strengths of transformer-based toxicity scoring and large language model (LLM) phrase extraction.
 
-### How It Works
+## Key Features
 
-The system employs a three-stage pipeline:
+- Multilingual Moderation: Detects and masks abusive content written in English, Hindi, Hinglish, and Odia.
+- Phrase-Level Precision: Masks only harmful words or phrases without altering legitimate user input.
+- Hybrid AI Engine: Uses Hugging Face Toxicity Model for scoring and Groq LLaMA-3.3 for structured phrase extraction.
+- Context-Preserving Output: Sanitizes text while retaining original complaint structure for backend processing.
+- Production-Ready API: Exposed as a RESTful FastAPI service optimized for real-time inference and integration with public service platforms.
+- Scalable Deployment: Fully deployable on AWS EC2 with persistent process management.
 
-1. **Initial Toxicity Screening** - Hugging Face's toxic-bert model evaluates overall toxicity levels to determine if deeper analysis is warranted.
 
-2. **Precise Phrase Extraction** - When toxicity is detected, Groq's LLaMA-3.3-70B model identifies the exact abusive phrases within the text.
-
-3. **Intelligent Masking** - A custom span masking engine replaces only the identified abusive content, preserving sentence structure and non-abusive context.
-
-This approach ensures that legitimate complaints containing abusive language are still processed rather than rejected outright, making it ideal for public service platforms.
-
-## Key Capabilities
-
-- Multilingual support for English, Hindi, Hinglish (Romanized Hindi), and basic Odia
-- Granular phrase-level detection rather than sentence-level censorship
-- Context preservation for downstream processing
-- Built entirely on free and open-source technologies
-- Lightweight architecture suitable for cloud or on-premises deployment
-
-## Technology Stack
-
-| Component | Technology |
-|-----------|-----------|
-| API Framework | FastAPI |
-| Language Model | Groq LLaMA-3.3-70B Versatile |
-| Toxicity Detection | Hugging Face unitary/toxic-bert |
-| Runtime | Uvicorn |
-| Supported Languages | English, Hindi, Hinglish, Odia |
-
-## Project Structure
+## Project Architecture
 ```
-SIH-ABUSE_DETECTOR_MODEL/
+AI-Abuse-Detector/
 │
 ├── app/
 │   ├── api/
@@ -49,23 +27,61 @@ SIH-ABUSE_DETECTOR_MODEL/
 │   │   ├── pipeline.py
 │   │   ├── toxicity_api.py
 │   │   └── llm_extractor.py
-│   ├── utils/
-│   └── config.py  
-│   ├── main.py
-├
-|── requirements.txt
-|── .gitignore
-|── LICENSE
+│   ├── config.py
+│   └── utils/
+│
+├── main.py
+├── requirements.txt
+└── README.md
 ```
 
-## Setup Instructions
+## Core Workflow
 
-### 1. Environment Preparation
+1. Text Preprocessing: User-submitted complaint text is normalized for consistent evaluation.
+2. Toxicity Scoring: Hugging Face's toxicity classifier determines whether deeper analysis is required.
+3. LLM-Based Phrase Extraction: Groq's LLaMA-3.3 model generates a structured JSON identifying abusive words or phrases.
+4. Span Construction & Masking: Custom logic locates abusive terms in the text and masks them with placeholder tokens.
+5. Final Response: Returns cleaned text, severity level, abuse indicators, and metadata for downstream systems.
 
-Create and activate a Python 3.10 virtual environment:
+## API Endpoint
+
+**POST** `/api/v1/moderate`
+
+Request Body:
+```json
+{
+  "text": "hey u motherfucker tell me how to register"
+}
+```
+
+Sample Response:
+```json
+{
+  "has_abuse": true,
+  "original_text": "hey u motherfucker tell me how to register",
+  "clean_text": "hey u ****** tell me how to register",
+  "severity": "high",
+  "flagged_spans": [
+    {
+      "start": 6,
+      "end": 19,
+      "original": "motherfucker",
+      "masked": "******",
+      "lang": "en",
+      "category": "abuse",
+      "severity": "high",
+      "confidence": 0.97
+    }
+  ]
+}
+```
+
+## Environment Setup
+
+### 1. Create Virtual Environment
 ```bash
-conda create -n Abuse_AI python=3.10
-conda activate Abuse_AI
+python3 -m venv venv
+source venv/bin/activate
 ```
 
 ### 2. Install Dependencies
@@ -73,66 +89,40 @@ conda activate Abuse_AI
 pip install -r requirements.txt
 ```
 
-### 3. Configure API Keys
+### 3. Configure Environment Variables
 
-Create a `.env` file in the project root with your API credentials:
+Create `.env` file:
 ```
 HF_API_KEY=your_huggingface_key
 GROQ_API_KEY=your_groq_key
 GROQ_MODEL=llama-3.3-70b-versatile
 ```
 
-**Important:** Never commit the `.env` file to version control.
+## Local Development
 
-## Running the Application
-
-Start the server from the project root directory:
+Run the FastAPI server:
 ```bash
-uvicorn app.main:app --reload --port 8001
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
-## API Reference
-
-### Moderation Endpoint
-
-**Endpoint:** `POST /api/v1/moderate`
-
-**Request Format:**
-```json
-{
-  "text": "hey u IDIOT tell me how to register"
-}
+Open interactive API docs at:
+```
+http://localhost:8001/docs
 ```
 
-**Response Format (Abuse Detected):**
-```json
-{
-  "has_abuse": true,
-  "original_text": "hey u IDIOT tell me how to register",
-  "clean_text": "hey u ****** tell me how to register",
-  "severity": "high",
-  "flagged_spans": [
-    {
-      "start": 6,
-      "end": 19,
-      "original": "idiot",
-      "masked": "******",
-      "lang": "en",
-      "category": "abuse",
-      "severity": "low",
-      "confidence": 0.97
-    }
-  ]
-}
-```
+## AWS EC2 Deployment Summary
 
-**Response Format (Clean Content):**
-```json
-{
-  "has_abuse": false,
-  "original_text": "please resolve my complaint soon",
-  "clean_text": "please resolve my complaint soon",
-  "severity": "none",
-  "flagged_spans": []
-}
-```
+1. Launch Ubuntu EC2 instance
+2. Install Python, Git, and dependencies
+3. Clone the repository
+4. Configure `.env`
+5. Start the API using Uvicorn
+6. Run API persistently with PM2
+7. (Optional) Configure NGINX reverse proxy for port 80 access
+
+## Project Outcomes
+
+- Ensures respectful communication on public grievance portals by removing abusive language without blocking user submissions.
+- Maintains message integrity, enabling authorities to process complaints accurately.
+- Enhances user experience by preventing rejection of complaints due to harmful language.
+- Provides a scalable moderation backend suitable for civic-tech applications.
